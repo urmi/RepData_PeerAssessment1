@@ -28,7 +28,8 @@ The dataset is stored in a comma-separated-value (CSV) file format and contains 
 
 Set the environment for the working directory. Download the data if not present. In this case the data file "activity.zip" existed, so unzipped the compressed file into the working directory. After examining the "activity.csv" file I decided to consider the variables "steps"" and "interval"" as numeric type and "date"" as Date type. I found no other additional preprocessing at the moment.
 
-```{r setenv, echo=TRUE}
+
+```r
 setwd("D:/Coursera/RepData_PeerAssessment1")
 # Libraries for plotting (ggplot2) and transforming data (plyr).
 library(ggplot2)
@@ -44,7 +45,8 @@ For this section, the instructions said to "ignore the missing values in the dat
 
 Below is a histogram plot of the total number of steps taken daily with bin interval of 2000 steps, along with a calculation of the mean and median total number taken each day.
 
-```{r histogram1, echo=TRUE}
+
+```r
 # create a data frame containing the sum of steps for each date
 stepsperDay <- aggregate(steps ~ date, activity, sum)
 # calculate the mean and median total steps per day
@@ -54,7 +56,9 @@ median.stepsperDay <- median(stepsperDay$steps)
 ggplot(stepsperDay, aes(x = steps)) + geom_histogram(binwidth=2000, col = "black", fill = "light blue") + labs(title="Total Number of Steps Per Day (excluding missing values)", x = "Total Number of Steps Per Day", y = "Frequency (Number of Days)") + geom_vline(aes(xintercept=mean.stepsperDay), color="red", linetype="dashed", size=1) 
 ```
 
-The mean total number of steps per day is `r format(mean.stepsperDay, digits=2)` and the median total number of steps per day is `r format(median.stepsperDay, digits=2)`.
+![plot of chunk histogram1](figure/histogram1-1.png) 
+
+The mean total number of steps per day is 10766 and the median total number of steps per day is 10765.
 
 
 
@@ -62,7 +66,8 @@ The mean total number of steps per day is `r format(mean.stepsperDay, digits=2)`
 
 Below is a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days.
 
-```{r timeseries1, echo=TRUE}
+
+```r
 # create a data frame containing the mean number of steps for each interval
 avebyInterval <- aggregate(steps ~ interval, activity, mean, na.rm = TRUE)
 
@@ -74,23 +79,27 @@ max.Interval <- avebyInterval[avebyInterval$steps==max(max.Steps),1]
 ggplot(avebyInterval, aes(x = interval, y = steps)) + geom_line() + labs(title = "Average Number of Steps Per Interval", x = "Interval", y = "Number of steps") + geom_vline(aes(xintercept=max.Interval), color="green", size=1) 
 ```
 
-The interval with the maximum number of steps (`r format(max.Steps, digits=2)`) is:  `r max.Interval`
+![plot of chunk timeseries1](figure/timeseries1-1.png) 
+
+The interval with the maximum number of steps (206) is:  835
 
 
 ## Imputing missing values
 
 Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data. The next code section will compute the missing values. 
 
-```{r computeNA, echo=TRUE}
+
+```r
 # calculate the number of missing values
 na.Values <- sum(is.na(activity$steps))
 ```
 
-The total number of missing values in the dataset is: `r na.Values`
+The total number of missing values in the dataset is: 2304
 
 The next section of code will create a new dataset (activity.Impute) which is identical to the original dataset (activity), except that the new dataset will have imputed values for any missing values of "steps". To populate missing values, I choose to replace them with the mean value for that 5-minute interval across all days.
 
-```{r newdataset, echo=TRUE}
+
+```r
 # create the new dataset
 activity.Impute <- adply(activity, 1, function(xna)
         # check if the "steps" value is missing        
@@ -101,13 +110,13 @@ activity.Impute <- adply(activity, 1, function(xna)
         } else {
                 xna
         })
-
 ```
 
 Below is a histogram plot that uses the new dataset. The histogram of the total number of steps taken daily with bin interval of 2000 steps, along with a calculation of the mean and median total number taken each day.
 
 
-```{r histogram2, echo=TRUE}
+
+```r
 # create a data frame containing the sum of steps for each date
 stepsperDay.Imp <- aggregate(steps ~ date, activity.Impute, sum)
 
@@ -117,10 +126,11 @@ median.stepsperDayImp <- median(stepsperDay.Imp$steps)
 
 # create a histogram using ggplot
 ggplot(stepsperDay.Imp, aes(x = steps)) + geom_histogram(binwidth=2000, col = "black", fill = "light green") + labs(title="Total Number of Steps Per Day (with imputed values)", x = "Total Number of Steps Per Day", y = "Frequency (Number of Days)") + geom_vline(aes(xintercept=mean.stepsperDayImp), color="orange", linetype="dashed", size=1)
-
 ```
 
-For the new dataset, the mean total number of steps per day is `r format(mean.stepsperDayImp, digits=2)` and the median total number of steps per day is `r format(median.stepsperDayImp, digits=2)`. We observe that the median value has changed due to the extra imputed values for missing data on the estimates of the total daily number of steps.
+![plot of chunk histogram2](figure/histogram2-1.png) 
+
+For the new dataset, the mean total number of steps per day is 10766 and the median total number of steps per day is 10762. We observe that the median value has changed due to the extra imputed values for missing data on the estimates of the total daily number of steps.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -132,7 +142,8 @@ To compare the activity patterns between weekdays and weekends, using the datase
         3. create a panel plot to compare the weekday and weekend datasets.
 
 
-```{r subdatasets, echo=TRUE}
+
+```r
 # Use weekday() function to subset the weekdays and weekends datasets
 library(lubridate)
 activity.weekday <- subset(activity.Impute, !weekdays(date) %in% c("Saturday", "Sunday"))
@@ -149,7 +160,8 @@ avgbyInterval.weekday <- cbind(avgbyInterval.weekday, day = rep("weekday"))
 
 The next code section will combine the datasets back together, specify the levels and create a panel plot to compare the weekday and weekend datasets.
 
-```{r timeseries2,fig.width=10, echo=TRUE}
+
+```r
 # combine the weekday and weekend datasets and specify the levels
 avgbyInterval.week <- rbind(avgbyInterval.weekday, avgbyInterval.weekend)
 levels(avgbyInterval.week$day) <- c("Weekday", "Weekend")
@@ -158,7 +170,8 @@ levels(avgbyInterval.week$day) <- c("Weekday", "Weekend")
 # ggplot(avgbyInterval.week, aes(x = interval, y = steps)) + geom_line() + facet_grid(day ~ 
 #    .) + labs(x = "Interval", y = "Number of steps")
 ggplot(avgbyInterval.week, aes(x = interval, y = steps, group=day)) + geom_line(aes(color=day)) + facet_wrap(~ day, nrow=2) + labs(x = "Interval", y = "Number of steps")
-
 ```
+
+![plot of chunk timeseries2](figure/timeseries2-1.png) 
 
 We observe that the weekends tends to have more activities compared to the weekdays. 
